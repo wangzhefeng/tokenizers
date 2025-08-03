@@ -22,7 +22,6 @@ if ROOT not in sys.path:
 import re
 from typing import List
 
-from data_provider.data_loader import data_load
 from utils.log_util import logger
 
 # global variable
@@ -31,35 +30,31 @@ LOGGING_LABEL = Path(__file__).name[:-3]
 
 class SimpleTokenizer:
 
-    def __init__(self, raw_text: str = None):
-        raw_text = data_load(
-            # url = "https://raw.githubusercontent.com/rasbt/LLMs-from-scratch/main/ch02/01_main-chapter-code/the-verdict.txt",
-            data_path = "./dataset/pretrain/gpt",
-            data_file = "the-verdict.txt",
-        )
-        self.vocab = self._build_vocab(raw_text)
-        self.str_to_int = self.vocab
-        self.int_to_str = {i: s for s, i in self.vocab.items()}
+    def __init__(self, text: str=None):
+        vocab = self._build_vocab(text)
+        # for token, token_id in vocab.items():
+        #     logger.info(f"(token: token_id) ({token}: {token_id})")
+        #     if token_id >= 50:
+        #         break
+        self.str_to_int = vocab
+        self.int_to_str = {i: s for s, i in vocab.items()}
 
     def _build_vocab(self, text: str):
         """
-        Build vocab
-        Converting tokens into token IDs
+        Build vocabulary: Converting text into {tokens, token IDs}
         """
         # logger.info("Build Vocab: Converting tokens into token IDs...")
         # 训练数据分词
         token_list = re.split(r'([,.:;?_!"()\']|--|\s)', text)
         token_list = [item.strip() for item in token_list if item.strip()]
-        # self.n_token = len(token_list)
-        # logger.info(f"Token size: {self.n_token}")
         # 训练数据所有 token(不重复)
         self.all_tokens = sorted(set(token_list))
         # special tokens: [BOS], [EOS], [PAD], [UNK], [endoftext], <UNK>
-        self.all_tokens.extend(["<|endoftext|>", "<|unk|>"]) 
+        self.all_tokens.extend(["<|endoftext|>", "<|unk|>"])
         # 构建词典
         vocab = {
-            token: integer
-            for integer, token in enumerate(self.all_tokens)
+            token: token_id
+            for token_id, token in enumerate(self.all_tokens)
         }
         
         return vocab
@@ -72,13 +67,15 @@ class SimpleTokenizer:
         """
         text encode to token IDs
         """
+        # 输入数据分词
         tokens = re.split(r'([,.:;?_!"()\']|--|\s)', text)
         tokens = [item.strip() for item in tokens if item.strip()]
+        # 输入数据 token 处理(加入未知 token)
         tokens = [
-            item
-            if item in self.str_to_int else "<|unk|>"
+            item if item in self.str_to_int else "<|unk|>"
             for item in tokens
         ]
+        # token 转换为 token ID
         token_ids = [self.str_to_int[s] for s in tokens]
 
         return token_ids
@@ -87,9 +84,10 @@ class SimpleTokenizer:
         """
         token IDs decode to text
         """
+        # token ID 转换为 token
         text = " ".join([self.int_to_str[i] for i in tokens])
         # Replace spaces before the specified punctuations
-        text = re.sub(r'\s+([,.?!"()\'])', r'\1', text)
+        text = re.sub(r'\s+([,.:;?!"()\'])', r'\1', text)
         
         return text
 
@@ -105,11 +103,15 @@ def main():
     )
     input_text_2 = "Hello, do you like tea? <|endoftext|> In the sunlit terraces of someunknownPlace."
     input_text_3 = """It's the last he painted, you know," 
-                    Mrs. Gisburn said with pardonable pride."""
+                      Mrs. Gisburn said with pardonable pride."""
     input_text_4 = "Hello, do you like tea. Is this-- a test?"
 
+    # corpus
+    from data_provider.data_loader import data_load
+    raw_text = data_load(data_path = "./dataset/pretrain/gpt", data_file = "the-verdict.txt")
+
     # simple tokenizer
-    tokenizer = SimpleTokenizer()
+    tokenizer = SimpleTokenizer(text=raw_text)
     logger.info(f"tokenizer.n_vocab: {tokenizer.n_vocab}")
     
     token_ids = tokenizer.encode(text=input_text_2)

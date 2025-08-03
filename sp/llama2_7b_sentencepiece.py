@@ -21,8 +21,8 @@ from pathlib import Path
 ROOT = str(Path.cwd())
 if ROOT not in sys.path:
     sys.path.append(ROOT)
-
 from dotenv import find_dotenv, load_dotenv
+
 from huggingface_hub import login, hf_hub_download
 import sentencepiece as spm
 

@@ -23,11 +23,12 @@ from typing import List
 
 import torch
 
-from tokenizers.simple_custom import SimpleTokenizer
-from tokenizers.simple_bpe import BPETokenizerSimple
-from tokenizers.gpt2_tiktoken import GPT2Tokenizer
-from tokenizers.llama2_7b_sentencepiece import Llama27bTokenizer
-from tokenizers.llama3_8b_bpe import Llama38bTokenizer
+from layers.tokenizers.simple_custom import SimpleTokenizer
+from layers.tokenizers.bpe.simple_bpe import BPETokenizerSimple
+from layers.tokenizers.bpe.tiktoken_bpe import TiktokenBPE
+from layers.tokenizers.bpe.openai_gpt2_bpe import OpenaiGPT2BPE
+from layers.tokenizers.bpe.llama3_8b_bpe import Llama38bTokenizer
+from layers.tokenizers.sp.llama2_7b_sentencepiece import Llama27bTokenizer
 
 # global variable
 LOGGING_LABEL = Path(__file__).name[:-3]
@@ -39,8 +40,9 @@ def choose_tokenizer(tokenizer_model: str = "gpt2"):
     """
     tokenizer_models_map = {
         "simple_custom": SimpleTokenizer,
-        # "simple_bpe": BPETokenizerSimple,
-        "gpt2": GPT2Tokenizer,
+        "simple_bpe": BPETokenizerSimple,
+        "tiktoken_gpt2_bpe": TiktokenBPE,
+        "openai_gpt2_bpe": OpenaiGPT2BPE,
         "llama2": Llama27bTokenizer,
         "llama3-8B": Llama38bTokenizer,
     }

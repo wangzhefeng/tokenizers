@@ -60,7 +60,7 @@ def main():
     from utils.log_util import logger
 
     # tokenizer
-    from tokenizers.llama3_8b_bpe import Llama38bTokenizer
+    from layers.tokenizers.bpe.llama3_8b_bpe import Llama38bTokenizer
     tokenizer = Llama38bTokenizer(special_token_version="v1")
 
     # chat tokenizer
