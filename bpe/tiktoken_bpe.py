@@ -25,6 +25,8 @@ warnings.filterwarnings("ignore")
 
 import tiktoken
 
+from utils.log_util import logger
+
 # global variable
 LOGGING_LABEL = Path(__file__).name[:-3]
 
@@ -33,6 +35,8 @@ class TiktokenBPE:
 
     def __init__(self, tokenizer_model: str = "gpt2"):
         self.tokenizer = tiktoken.get_encoding(tokenizer_model)
+        # logger.info(f"tokenizer.n_vocab: {self.tokenizer.n_vocab}")
+        # logger.info(f"tokenizer.eot_token: {self.tokenizer.eot_token}")
     
     @property
     def n_vocab(self):
@@ -76,9 +80,8 @@ def main():
     raw_text = data_load(data_path = "./dataset/pretrain/gpt", data_file = "the-verdict.txt")
 
     # BPE: tiktoken
-    tokenizer = TiktokenBPE()
-    logger.info(f"tokenizer.n_vocab: {tokenizer.n_vocab}")
-    
+    tokenizer = TiktokenBPE() 
+
     corpus_token_ids = tokenizer.encode(text=raw_text)
     logger.info(f"corpus_token_ids: {len(corpus_token_ids)}")
 
