@@ -25,8 +25,6 @@ warnings.filterwarnings("ignore")
 
 import tiktoken
 
-from utils.log_util import logger
-
 # global variable
 LOGGING_LABEL = Path(__file__).name[:-3]
 

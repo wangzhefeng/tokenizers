@@ -27,14 +27,14 @@ from layers.tokenizers.simple_custom import SimpleTokenizer
 from layers.tokenizers.bpe.simple_bpe import BPETokenizerSimple
 from layers.tokenizers.bpe.tiktoken_bpe import TiktokenBPE
 from layers.tokenizers.bpe.openai_gpt2_bpe import OpenaiGPT2BPE
-from layers.tokenizers.bpe.llama3_8b_bpe import Llama38bTokenizer
 from layers.tokenizers.sp.llama2_7b_sentencepiece import Llama27bTokenizer
+from layers.tokenizers.bpe.llama3_8b_bpe import Llama38bTokenizer
 
 # global variable
 LOGGING_LABEL = Path(__file__).name[:-3]
 
 
-def choose_tokenizer(tokenizer_model: str = "gpt2"):
+def choose_tokenizer(tokenizer_model: str = "tiktoken_gpt2_bpe"):
     """
     choose tokenizer
     """
@@ -51,7 +51,7 @@ def choose_tokenizer(tokenizer_model: str = "gpt2"):
     return tokenizer
 
 
-def text_to_token_ids(text: str, tokenizer_model: str = "gpt2"):
+def text_to_token_ids(text: str, tokenizer_model: str = "tiktoken_gpt2_bpe"):
     """
     tokenizer text to token_ids 
     """
@@ -68,7 +68,7 @@ def text_to_token_ids(text: str, tokenizer_model: str = "gpt2"):
     return encoded_tensor
 
 
-def token_ids_to_text(token_ids: List, tokenizer_model: str = "gpt2"):
+def token_ids_to_text(token_ids: List, tokenizer_model: str = "tiktoken_gpt2_bpe"):
     """
     tokenizer decoded token_ids to text 
     """
@@ -98,7 +98,7 @@ def main():
     )
 
     # test tokenizer
-    tokenizer_model_name = "simple_bpe"
+    tokenizer_model_name = "tiktoken_gpt2_bpe"
     token_ids = text_to_token_ids(input_text, tokenizer_model=tokenizer_model_name)
     decoded_text = token_ids_to_text(token_ids, tokenizer_model=tokenizer_model_name)
     logger.info(f"input_text: {input_text}")
