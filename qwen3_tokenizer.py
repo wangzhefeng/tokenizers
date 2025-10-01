@@ -60,6 +60,10 @@ def main():
     text = tokenizer.decode(input_token_ids_list)
     logger.info(f"text: {text}")
 
+    eos_token_id = tokenizer.eos_token_id
+    logger.info(f"token_id of <|endoftext|>: {tokenizer.encode('<|endoftext|>')}")
+    logger.info(f"eos_token_id: {eos_token_id}")
+
     for i in input_token_ids_list:
         logger.info(f"{i} -> {tokenizer.decode([i])}")
 
