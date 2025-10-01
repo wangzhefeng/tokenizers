@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 # ***************************************************
-# * File        : qwen_tokenizer.py
+# * File        : qwen3_tokenizer2.py
 # * Author      : Zhefeng Wang
 # * Email       : zfwang7@gmail.com
-# * Date        : 2025-09-29
-# * Version     : 1.0.092922
+# * Date        : 2025-10-02
+# * Version     : 1.0.100202
 # * Description : description
 # * Link        : link
 # * Requirement : 相关模块版本需求(例如: numpy >= 2.1.0)
@@ -20,52 +20,92 @@ from pathlib import Path
 ROOT = str(Path.cwd())
 if ROOT not in sys.path:
     sys.path.append(ROOT)
+import re
 import warnings
 warnings.filterwarnings("ignore")
 
-from utils.llm.reasoning_from_scratch.qwen3 import download_qwen3_small
-from utils.llm.reasoning_from_scratch.qwen3 import Qwen3Tokenizer
+from tokenizers import Tokenizer
 
 # global variable
 LOGGING_LABEL = Path(__file__).name[:-3]
 
 
-# tokenizer model path
-tokenizer_model_dir = "./downloaded_models/qwen3_model"
-tokenizer_model_path = Path(tokenizer_model_dir).joinpath("tokenizer-base.json")
+class Qwen3Tokenizer:
+    _SPECIALS = [
+        "<|endoftext|>",
+        "<|im_start|>", "<|im_end|>",
+        "<|object_ref_start|>", "<|object_ref_end|>",
+        "<|box_start|>", "<|box_end|>",
+        "<|quad_start|>", "<|quad_end|>",
+        "<|vision_start|>", "<|vision_end|>",
+        "<|vision_pad|>", "<|image_pad|>", "<|video_pad|>",
+        "<think>", "</think>"
+    ]
+    _SPLIT_RE = re.compile(r"(<\|[^>]+?\|>|<think>|</think>)")
 
-# tokenizer model download
-if not tokenizer_model_path.exists():
-    download_qwen3_small(
-        kind="base", 
-        tokenizer_only=True, 
-        out_dir=tokenizer_model_dir,
-    )
+    def __init__(self, tokenizer_file_path="tokenizer.json", repo_id=None,
+                 apply_chat_template=True, add_generation_prompt=False, add_thinking=False):
 
-# tokenizer
-tokenizer = Qwen3Tokenizer(tokenizer_file_path=tokenizer_model_path)
+        self.apply_chat_template = apply_chat_template
+        self.add_generation_prompt = add_generation_prompt
+        self.add_thinking = add_thinking
+
+        tok_file = Path(tokenizer_file_path)
+        self._tok = Tokenizer.from_file(str(tok_file))
+        self._special_to_id = {}
+        for t in self._SPECIALS:
+            tid = self._tok.token_to_id(t)
+            if tid is not None:
+                self._special_to_id[t] = tid
+
+        self.pad_token_id = self._special_to_id["<|endoftext|>"]
+        self.eos_token_id = self.pad_token_id
+
+        if repo_id and "Base" not in repo_id:
+            eos_token = "<|im_end|>"
+        else:
+            eos_token = "<|endoftext|>"
+        if eos_token in self._special_to_id:
+            self.eos_token_id = self._special_to_id[eos_token]
+
+    def encode(self, text, chat_wrapped=None):
+        if chat_wrapped is None:
+            chat_wrapped = self.apply_chat_template
+
+        stripped = text.strip()
+        if stripped in self._special_to_id and "\n" not in stripped:
+            return [self._special_to_id[stripped]]
+
+        if chat_wrapped:
+            text = self._wrap_chat(text)
+
+        ids = []
+        for part in filter(None, self._SPLIT_RE.split(text)):
+            if part in self._special_to_id:
+                ids.append(self._special_to_id[part])
+            else:
+                ids.extend(self._tok.encode(part).ids)
+        return ids
+
+    def decode(self, ids):
+        return self._tok.decode(ids, skip_special_tokens=False)
+
+    def _wrap_chat(self, user_msg):
+        s = f"<|im_start|>user\n{user_msg}<|im_end|>\n"
+        if self.add_generation_prompt:
+            s += "<|im_start|>assistant"
+            if self.add_thinking:
+                s += "\n"
+            else:
+                s += "\n<think>\n\n</think>\n\n"
+        return s
 
 
 
 
 # 测试代码 main 函数
 def main():
-    from utils.log_util import logger
-
-    prompt = "Explain large language models."
-
-    input_token_ids_list = tokenizer.encode(prompt)
-    logger.info(f"input_token_ids_list: {input_token_ids_list}") 
-
-    text = tokenizer.decode(input_token_ids_list)
-    logger.info(f"text: {text}")
-
-    eos_token_id = tokenizer.eos_token_id
-    logger.info(f"token_id of <|endoftext|>: {tokenizer.encode('<|endoftext|>')}")
-    logger.info(f"eos_token_id: {eos_token_id}")
-
-    for i in input_token_ids_list:
-        logger.info(f"{i} -> {tokenizer.decode([i])}")
+    pass
 
 if __name__ == "__main__":
     main()
